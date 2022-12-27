@@ -5,7 +5,9 @@
 *.tfstate
 *.tfstate.*
 
+.DS_Store
 .idea/
+*.zip
 
 # Crash log files
 crash.log
