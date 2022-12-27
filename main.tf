@@ -33,17 +33,17 @@ resource "aws_lambda_function" "docdb_retriever" {
   timeout          = 60
   environment {
     variables = {
-      MONGO_USER            = "alex"
-      MONGO_PWD             = "sS509509"
-      MONGO_DATABASE        = "openapi"
-      MONGO_COL_ACTIONS     = "actions"
-      MONGO_COL_OPERATIONS  = "operations"
-      MONGO_HOST_AND_PARAMS = "docdb-alex-2022-11-16.cluster-cdpgg8pexphe.us-west-2.docdb.amazonaws.com:27017/?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
+      MONGO_USER            = var.aws_lambda_env_variables.MONGO_USER
+      MONGO_PWD             = var.aws_lambda_env_variables.MONGO_PWD
+      MONGO_DATABASE        = var.aws_lambda_env_variables.MONGO_DATABASE
+      MONGO_COL_ACTIONS     = var.aws_lambda_env_variables.MONGO_COL_ACTIONS
+      MONGO_COL_OPERATIONS  = var.aws_lambda_env_variables.MONGO_COL_OPERATIONS
+      MONGO_HOST_AND_PARAMS = var.aws_lambda_env_variables.MONGO_HOST_AND_PARAMS
     }
   }
   vpc_config {
-    subnet_ids         = ["subnet-0ac6cd9c871c536d8", "subnet-026aa030d347949b3"]
-    security_group_ids = ["sg-029bce67"]
+    subnet_ids         = [var.aws_lambda_vpc_config.subnet_id_1, var.aws_lambda_vpc_config.subnet_id_2]
+    security_group_ids = [var.aws_lambda_vpc_config.security_group_id_1]
   }
 }
 
@@ -53,8 +53,7 @@ resource "aws_cloudwatch_log_group" "docdb_retriever" {
 }
 
 resource "aws_iam_role" "lambda_exec" {
-  name = "serverless_lambda"
-
+  name               = "docdb_retriever_role"
   assume_role_policy = jsonencode({
     Version   = "2012-10-17"
     Statement = [
@@ -86,8 +85,8 @@ resource "aws_apigatewayv2_authorizer" "authorizer" {
   identity_sources = ["$request.header.Authorization"]
   name             = "daywaa-authorizer"
   jwt_configuration {
-    audience = ["https://daywaa-auth0-authorizer"]
-    issuer   = "https://daywaa.au.auth0.com/"
+    audience = [var.daywaa_auth0_authorizer.audience]
+    issuer   = var.daywaa_auth0_authorizer.issuer
   }
 }
 
