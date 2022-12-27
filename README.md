@@ -1,6 +1,14 @@
-# Learn Terraform - Lambda functions and API Gateway
+### reference
+https://developer.hashicorp.com/terraform/tutorials/aws/lambda-api-gateway
 
-AWS Lambda functions and API gateway are often used to create serverless
-applications.
+### requirements
+install terraform https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
 
-This repo is a companion repo to the [AWS Lambda functions and API gateway](https://developer.hashicorp.com/terraform/tutorials/aws/lambda-api-gateway) tutorial.
+install aws cli
+
+setup aws configure. the aws account should have access to lambda, api gateway, iam, cloudwatch
+
+### cmds
+terraform init
+
+terraform apply --auto-approve
