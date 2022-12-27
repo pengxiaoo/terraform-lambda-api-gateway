@@ -19,12 +19,12 @@ provider "aws" {
 data "archive_file" "lambda_docdb_retriever" {
   type        = "zip"
   source_file = "${path.module}/lambda-docdb-retriever/lambda.py"
-  output_path = "lambda.py.zip"
+  output_path = "${path.module}/lambda-docdb-retriever/lambda.py.zip"
 }
 
 resource "aws_lambda_function" "docdb_retriever" {
   function_name    = "lambda_docdb_retriever"
-  filename         = "lambda.py.zip"
+  filename         = "${path.module}/lambda-docdb-retriever/lambda.py.zip"
   runtime          = "python3.9"
   handler          = "lambda.lambda_handler"
   layers           = [var.aws_lambda_layer]
@@ -76,20 +76,28 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
 }
 
 resource "aws_apigatewayv2_api" "lambda" {
-  name          = "serverless_lambda_gw"
+  name          = "api-docdb-retriever"
   protocol_type = "HTTP"
 }
 
-resource "aws_apigatewayv2_stage" "lambda" {
-  api_id = aws_apigatewayv2_api.lambda.id
+resource "aws_apigatewayv2_authorizer" "authorizer" {
+  api_id           = aws_apigatewayv2_api.lambda.id
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.Authorization"]
+  name             = "daywaa-authorizer"
+  jwt_configuration {
+    audience = ["https://daywaa-auth0-authorizer"]
+    issuer   = "https://daywaa.au.auth0.com/"
+  }
+}
 
-  name        = "serverless_lambda_stage"
+resource "aws_apigatewayv2_stage" "stage" {
+  api_id      = aws_apigatewayv2_api.lambda.id
+  name        = "v1"
   auto_deploy = true
-
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gw.arn
-
-    format = jsonencode({
+    format          = jsonencode({
       requestId               = "$context.requestId"
       sourceIp                = "$context.identity.sourceIp"
       requestTime             = "$context.requestTime"
@@ -105,22 +113,31 @@ resource "aws_apigatewayv2_stage" "lambda" {
   }
 }
 
-resource "aws_apigatewayv2_integration" "hello_world" {
-  api_id = aws_apigatewayv2_api.lambda.id
+resource "aws_apigatewayv2_integration" "integration" {
+  api_id             = aws_apigatewayv2_api.lambda.id
   integration_uri    = aws_lambda_function.docdb_retriever.invoke_arn
   integration_type   = "AWS_PROXY"
   integration_method = "POST"
 }
 
-resource "aws_apigatewayv2_route" "hello_world" {
-  api_id = aws_apigatewayv2_api.lambda.id
+resource "aws_apigatewayv2_route" "route_actions" {
+  api_id             = aws_apigatewayv2_api.lambda.id
+  route_key          = "GET /actions"
+  target             = "integrations/${aws_apigatewayv2_integration.integration.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.authorizer.id
+}
 
-  route_key = "GET /hello"
-  target    = "integrations/${aws_apigatewayv2_integration.hello_world.id}"
+resource "aws_apigatewayv2_route" "route_operations" {
+  api_id             = aws_apigatewayv2_api.lambda.id
+  route_key          = "GET /operations"
+  target             = "integrations/${aws_apigatewayv2_integration.integration.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.authorizer.id
 }
 
 resource "aws_cloudwatch_log_group" "api_gw" {
-  name = "/aws/api_gw/${aws_apigatewayv2_api.lambda.name}"
+  name              = "/aws/api_gw/${aws_apigatewayv2_api.lambda.name}"
   retention_in_days = 30
 }
 

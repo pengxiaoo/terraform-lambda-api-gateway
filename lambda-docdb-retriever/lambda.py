@@ -15,21 +15,21 @@ mongo_host_and_params = os.getenv('MONGO_HOST_AND_PARAMS')
 
 def lambda_handler(event, context):
     logger.info(f'received incoming event:{json.dumps(event)}')
-    method = event['requestContext']['http']['method']
-    path = event['requestContext']['http']['path']
+    method = event['requestContext']['httpMethod']
+    path = event['requestContext']['path']
     params = event['queryStringParameters']
     logger.info(f'method:{method}, path:{path}, params:{params}')
     client = MongoClient(f'mongodb://{user}:{pwd}@{mongo_host_and_params}')
 
     try:
-        if path == '/dev/actions':
+        if path == '/v1/actions':
             db = client.get_database(db_name, read_preference=ReadPreference.SECONDARY)
             col = db.get_collection(col_actions_name)
             cursor = col.find({}, {"_id": 0}).sort([("timestamp", -1)])
             return build_response(200, body={
                 'actions': list(cursor)
             })
-        elif path == '/dev/operations':
+        elif path == '/v1/operations':
             uuid = params['uuid']
             db = client.get_database(db_name, read_preference=ReadPreference.SECONDARY)
             col = db.get_collection(col_operations_name)
