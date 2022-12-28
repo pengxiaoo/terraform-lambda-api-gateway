@@ -11,6 +11,7 @@ install aws cli
 
 setup aws configure. the aws account should have access to lambda, api gateway, iam, cloudwatch
 
+customize variables.tf
 ### cmds
 
 terraform init

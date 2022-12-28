@@ -17,6 +17,7 @@ provider "aws" {
   profile = var.aws_config.profile
 }
 
+# source file of lambda function
 data "archive_file" "lambda_docdb_retriever" {
   type        = "zip"
   source_file = "${path.module}/lambda-docdb-retriever/lambda.py"
