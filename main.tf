@@ -13,7 +13,8 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region  = var.aws_config.region
+  profile = var.aws_config.profile
 }
 
 data "archive_file" "lambda_docdb_retriever" {
