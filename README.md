@@ -1,7 +1,6 @@
 ### reference
 
-I followed the official tutorial https://developer.hashicorp.com/terraform/tutorials/aws/lambda-api-gateway. It maybe
-not the best practice since it is a tutorial for beginners.
+I followed the official doc https://developer.hashicorp.com/terraform/tutorials/aws/lambda-api-gateway
 
 ### requirements
 
